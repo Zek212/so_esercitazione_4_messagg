@@ -14,12 +14,22 @@ int main() {
 
 
 
-	key_t queue_operandi_1  = /* TBD: Definire la chiave per la coda 1 per gli operandi */
-	key_t queue_risultati_1 = /* TBD: Definire la chiave per la coda 1 per le risposte */
+	key_t queue_operandi_1  = /* TBD: Definire la chiave per la coda 1 per gli operandi */ ftok(FTOK_PATH_Q_OP_1, FTOK_CHAR_Q_OP_1);
+	
+	if(queue_operandi_1<0){
+	perror("errore");
+	exit(1);
+}
+
+	key_t queue_risultati_1 = /* TBD: Definire la chiave per la coda 1 per le risposte */ ftok(FTOK_PATH_Q_RIS_1, FTOK_CHAR_Q_RIS_1);
+	if(queue_rislutati_1<0){
+	perror("errore");
+	exit(1);
+}
 
 
 
-	int id_operandi_1 = /* TBD: Ottenere la coda 1 per gli operandi */
+	int id_operandi_1 = /* TBD: Ottenere la coda 1 per gli operandi */ msgget(queue_operandi_1, 0644);
 
 	if(id_operandi_1 < 0) {
 		perror("Msgget fallita");
@@ -28,7 +38,7 @@ int main() {
 
 
 
-	int id_risultati_1 = /* TBD: Ottenere la coda 1 per le risposte */
+	int id_risultati_1 = /* TBD: Ottenere la coda 1 per le risposte */ msgget(queue_risultati_1, 0644);
 
 	if(id_risultati_1 < 0) {
 		perror("Msgget fallita");
@@ -43,7 +53,8 @@ int main() {
 	int i;
 
 	for(i=0; i<3; i++) {
-
+	struct msg_operandi op;
+	struct msg_risposta ris;
 
 		int ret;
 
@@ -65,9 +76,13 @@ int main() {
 
 		/* TBD: Inviare gli operandi "a" e "b" al processo P2 sulla coda 1 degli operandi */
 
+		op.processo=p2;
+		op.operandi[0]=a;
+		op.operandi[1]=b;
+
 		printf("[P1] SEND P2\n");
 
-		ret = /* TBD */
+		ret = /* TBD */ msgsnd(id_operandi_1, &op, sizeof(struct msg_operandi)-sizeof(long), 0);
 
 		if(ret<0) {
 			perror("Msgsnd fallita");
@@ -78,9 +93,15 @@ int main() {
 
 		/* TBD: Inviare gli operandi "c", "d", "e", "f" al processo P3 sulla coda 1 degli operandi */
 
+		op.processo =p3;
+		op.operandi[0]=c;
+		op.operandi[1]=d;
+		op.operandi[2]=e;
+		op.operandi[3]=f;
+
 		printf("[P1] SEND P3\n");
 
-		ret = /* TBD */
+		ret = /* TBD */ msgsnd(id_operandi_1, &op, sizeof(struct msg_operandi)-sizeof(long),0);
 
 		if(ret<0) {
 			perror("Msgsnd fallita");
@@ -92,10 +113,14 @@ int main() {
 
 		/* TBD: Inviare gli operandi "g" e "h" al processo P4 sulla coda 1 degli operandi */
 
+		op.processo=p4;
+		op.operandi[0]=g;
+		op.operandi[1]=h;
+
 
 		printf("[P1] SEND P4\n");
 
-		ret = /* TBD */
+		ret = /* TBD */ msgsnd(id_operandi_1, &op, sizeof(struct msg_operandi)-sizeof(long),0);
 
 		if(ret<0) {
 			perror("Msgsnd fallita");
@@ -106,16 +131,19 @@ int main() {
 
 		/* TBD: Ricevere la risposta "r1" dal processo P2 sulla coda 1 delle risposte */
 
+
+	
 		printf("[P1] RECEIVE P2\n");
 
-		ret = /* TBD */
+		ret = /* TBD */  msgrcv(id_risultati_1, &ris, sizeof(struct msg_risposta)-sizeof(long), P2, 0);
+
 
 		if(ret<0) {
 			perror("Msgrcv fallita");
 			exit(1);
 		}
 
-		r1 = /* TBD */
+		r1 = /* TBD */ ris.risposta;
 
 
 
@@ -124,30 +152,32 @@ int main() {
 
 		printf("[P1] RECEIVE P3\n");
 
-		ret = /* TBD */
+		ret = /* TBD */ msgrcv(id_risultati_1, &ris, sizeof(struct msg_risposta)-sizeof(long), P3, 0);
 
 		if(ret<0) {
 			perror("Msgrcv fallita");
 			exit(1);
 		}
 
-		r2 = /* TBD */
+		r2 = /* TBD */ ris.risposta;
 
 
 
 
 		/* TBD: Ricevere la risposta "r3" dal processo P4 sulla coda 1 delle risposte */
 
-		printf("[P1] RECEIVE P4\n");
 
-		ret = /* TBD */
+		printf("[P1] RECEIVE P4\n");
+		
+
+		ret = /* TBD */ msgrcv(id_risultati_1, &ris, sizeof(struct msg_risposta)-sizeof(long), P4, 0);
 
 		if(ret<0) {
 			perror("Msgrcv fallita");
 			exit(1);
 		}
 
-		r3 = /* TBD */
+		r3 = /* TBD */ ris.risposta;
 
 
 
