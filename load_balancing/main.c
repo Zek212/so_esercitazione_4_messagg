@@ -18,13 +18,14 @@ int main() {
 	int ret;
 
 
+	struct messaggio m;
 
 	/*
 	  TBD: Creare una coda per i messaggi dai client
 	  verso il balancer
 	*/
 
-	msg_id_balancer = /* TBD */
+	msg_id_balancer = /* TBD */ msgget(IPC_PRIVATE, IPC_CREAT | 0644);
 
 	if(msg_id_balancer < 0) {
 
@@ -41,7 +42,7 @@ int main() {
 
 	for(i=0; i<TOTALE_SERVER; i++) {
 
-		msg_id_server[i] = /* TBD */
+		msg_id_server[i] = /* TBD */ msgget(IPC_PRIVATE, IPC_CREAT | 0644);
 
 		if(msg_id_server[i] < 0) {
 
@@ -60,6 +61,15 @@ int main() {
 	for(i=0; i<TOTALE_CLIENT; i++) {
 
 		/* TBD */
+	p=fork();
+	if(p==0){
+	printf("[P] %d: processo client in corso", getpid());
+	Client(msg_id_balancer);
+	exit(0);
+}	else if(p<0){
+	perror("errore nella fork");
+	exit(1);
+}
 	}
 
 
@@ -72,6 +82,15 @@ int main() {
 	for(i=0; i<TOTALE_SERVER; i++) {
 
 		/* TBD */
+	p=fork();
+	if(p==0){
+	printf("[P] %d: processo server in corso", getpid());
+	Server(msg_id_server[i]);
+	exit(0);
+}else if(p<0){
+	perror("errore nella fork");
+	exit(1);
+}
 	}
 
 
@@ -82,7 +101,14 @@ int main() {
 	*/
 
 
-
+	p=fork();
+	if(p==0){
+	printf("[P] %d: processo balancer in corso", getpid());
+	Balancer(msg_id_balancer, msg_id_server);
+	exit(0);
+}	else if(p<0){
+	perror("errore nella fork);
+}
 
 	/*
 	  TBD: Il processo padre si pone in attesa della terminazione
@@ -92,6 +118,19 @@ int main() {
 	for(i=0; i<TOTALE_CLIENT+TOTALE_SERVER+1; i++) {
 
 		/* TBD */
+	p=wait(&status);
+
+	if(p<0){
+	perror("errore nella fork");
+	exit(1);
+
+	if(WIFEXITED(status) && WEXITSTATUS(status)==0){
+	printf("il processo è terminato con successo\n");
+}else{
+	printf("errore");
+}
+}
+
 	}
 
 
@@ -99,7 +138,21 @@ int main() {
 	/*
 	  TBD: Rimozione delle code dal sistema
 	*/
+	ret = msgctl(msg_id_balancer, IPC_RMID, NULL);
 
+	if (ret < 0) {
+		perror("Errore msgctl() balancer\n");
+		exit(1);
+	}
+
+	for(int i = 0; i < TOTALE_SERVER; i++) {
+		ret = msgctl(msg_id_server[i], IPC_RMID, NULL);
+
+		if (ret < 0) {
+			perror("Errore msgctl() server\n");
+			exit(1);
+		}
+	}
 
 
 	return 0;
