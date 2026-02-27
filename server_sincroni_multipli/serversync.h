@@ -7,7 +7,16 @@
 
 /* TBD: Definire una struct per i messaggi "REQUEST TO SEND" */
 
+struct {
+	long type;
+}request_to_send
+
 /* TBD: Definire una struct per i messaggi "OK TO SEND" */
+
+struct{
+	 long type;
+	 int id_coda;
+}ok_to_send
 
 typedef struct {
     long type;
